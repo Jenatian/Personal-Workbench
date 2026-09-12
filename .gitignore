@@ -1,14 +1,18 @@
 # Worker (后端单独部署)
 worker/
 
-# Pages _worker.js 部署到 Pages,不忽略
-# _worker.js
+# Pages Functions 部署到 Pages,不忽略
+# functions/
 
 # Node
 node_modules/
 package-lock.json
 
-# 依赖
+# 测试
+test-results/
+playwright-report/
+
+# 日志
 *.log
 
 # 系统
