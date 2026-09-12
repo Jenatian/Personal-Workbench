@@ -1,4 +1,4 @@
-const CACHE_NAME = 'workbench-v4';
+const CACHE_NAME = 'workbench-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -29,6 +29,23 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+
+  const url = new URL(e.request.url);
+
+  // API 请求不走缓存,直接网络请求
+  if (url.pathname.startsWith('/api/')) {
+    e.respondWith(
+      fetch(e.request).catch(() =>
+        new Response(JSON.stringify({ ok: false, error: '网络错误' }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      )
+    );
+    return;
+  }
+
+  // 静态资源: cache-first
   e.respondWith(
     caches.match(e.request).then((cached) => {
       const fetchPromise = fetch(e.request).then((res) => {
