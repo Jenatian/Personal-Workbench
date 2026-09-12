@@ -1,16 +1,29 @@
 import { jsonResponse, errorResponse, corsHeaders, parseRSS } from '../_utils';
 
 const SPEAKING_FEEDS = [
-  { source: 'VOA Everyday', url: 'https://learningenglish.voanews.com/rss/' },
-  { source: 'Culips ESL', url: 'https://esl.culips.com/feed/podcast' },
   { source: 'CommonSense ESL', url: 'https://commonsense-esl.com/feed/' },
+  { source: 'Culips ESL', url: 'https://esl.culips.com/feed/podcast' },
+  { source: 'All ESL', url: 'https://www.alesl.com/feed/' },
+  { source: 'ESL Pod', url: 'https://eslpod.libsyn.com/rss' },
 ];
 
 const READING_FEEDS = [
-  { source: 'VOA Learning', url: 'https://learningenglish.voanews.com/rss/' },
   { source: 'CommonSense ESL', url: 'https://commonsense-esl.com/feed/' },
-  { source: 'Culips ESL', url: 'https://esl.culips.com/feed/podcast' },
+  { source: 'Breaking News', url: 'https://breakingnewsenglish.com/rss.xml' },
+  { source: 'News in Levels', url: 'https://www.newsinlevels.com/feed/' },
+  { source: 'All ESL', url: 'https://www.alesl.com/feed/' },
 ];
+
+function cleanTitle(title) {
+  return (title || '')
+    .replace(/^[\s\u2022\u2023\u25E6\u25AA\u25AB\u2043\u2219]+/, '') // 去掉开头的项目符号
+    .replace(/^[•\-\*]\s*/, '')
+    .trim();
+}
+
+function cleanExcerpt(text) {
+  return (text || '').replace(/\s+/g, ' ').trim();
+}
 
 export async function onRequestGet(context) {
   const { request, env, waitUntil } = context;
@@ -37,6 +50,7 @@ export async function onRequestGet(context) {
 
     const feeds = category === 'reading' ? READING_FEEDS : SPEAKING_FEEDS;
     const items = [];
+    const seenTitles = new Set();
 
     const fetchTasks = feeds.map(async (feed) => {
       try {
@@ -44,17 +58,28 @@ export async function onRequestGet(context) {
         if (!res.ok) return;
         const xml = await res.text();
         const parsed = parseRSS(xml);
-        parsed.slice(0, 4).forEach((item) => {
-          const words = (item.summary || '').split(/\s+/).length;
+        let count = 0;
+        for (const item of parsed) {
+          if (count >= 4) break;
+          const title = cleanTitle(item.title);
+          if (!title || title.length < 5) continue;
+          // 去重
+          const titleKey = title.toLowerCase().slice(0, 50);
+          if (seenTitles.has(titleKey)) continue;
+          seenTitles.add(titleKey);
+
+          const excerpt = cleanExcerpt(item.summary || '');
+          const words = excerpt.split(/\s+/).length;
           items.push({
             source: feed.source,
-            title: item.title,
-            excerpt: (item.summary || '').slice(0, 300),
+            title: title,
+            excerpt: excerpt.slice(0, 300),
             link: item.link,
             date: item.date,
             readTime: Math.max(1, Math.ceil(words / 150)),
           });
-        });
+          count++;
+        }
       } catch (e) {
         // 忽略单个源失败
       }
