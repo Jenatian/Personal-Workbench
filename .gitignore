@@ -1,6 +1,9 @@
 # Worker (后端单独部署)
 worker/
 
+# Pages _worker.js 部署到 Pages,不忽略
+# _worker.js
+
 # Node
 node_modules/
 package-lock.json
