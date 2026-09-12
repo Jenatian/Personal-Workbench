@@ -1,0 +1,18 @@
+# Worker (后端单独部署)
+worker/
+
+# Node
+node_modules/
+package-lock.json
+
+# 依赖
+*.log
+
+# 系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/

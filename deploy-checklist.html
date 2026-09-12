@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>部署检查清单 - 个人工作台</title>
+<style>
+  :root {
+    --bg: #FAFAFA;
+    --card: #FFFFFF;
+    --text: #262626;
+    --secondary: #8E8E8E;
+    --border: #EFEFEF;
+    --accent: #E1306C;
+    --accent2: #F77737;
+    --green: #00C9A7;
+    --red: #FF3B30;
+    --orange: #FF9500;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06);
+    --radius: 12px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 0;
+  }
+  .header {
+    background: linear-gradient(135deg, #E1306C 0%, #F77737 100%);
+    color: #fff;
+    padding: 40px 24px 32px;
+  }
+  .header h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+  .header p { font-size: 14px; opacity: 0.85; }
+  .header .progress-bar {
+    margin-top: 20px;
+    height: 6px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .header .progress-bar .fill {
+    height: 100%;
+    background: #fff;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+  .header .progress-text {
+    margin-top: 8px;
+    font-size: 13px;
+    opacity: 0.85;
+  }
+  .container { max-width: 640px; margin: 0 auto; padding: 20px 16px 80px; }
+  .section { margin-bottom: 28px; }
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .check-item {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+  }
+  .check-item:active { opacity: 0.7; }
+  .check-box {
+    width: 22px; height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+    margin-top: 1px;
+  }
+  .check-item.done .check-box {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .check-box svg { width: 14px; height: 14px; stroke: #fff; stroke-width: 3; fill: none; display: none; }
+  .check-item.done .check-box svg { display: block; }
+  .check-content { flex: 1; }
+  .check-label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .check-item.done .check-label {
+    text-decoration: line-through;
+    color: var(--secondary);
+  }
+  .check-desc {
+    font-size: 13px;
+    color: var(--secondary);
+    line-height: 1.5;
+  }
+  .check-code {
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 12px;
+    background: #f5f5f5;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-top: 6px;
+    display: block;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .badge-required { background: rgba(255,59,48,0.12); color: var(--red); }
+  .badge-optional { background: rgba(255,149,0,0.12); color: var(--orange); }
+  .badge-info { background: rgba(0,201,167,0.12); color: var(--green); }
+  .summary {
+    position: sticky;
+    bottom: 16px;
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 32px;
+  }
+  .summary-count { font-size: 13px; color: var(--secondary); }
+  .summary-count strong { font-size: 20px; color: var(--text); }
+  .summary-btn {
+    background: linear-gradient(135deg, #E1306C, #F77737);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .summary-btn:active { transform: scale(0.97); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>部署前检查清单</h1>
+  <p>个人工作台 v1.0.0 — 前端 + Cloudflare Worker</p>
+  <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%"></div></div>
+  <div class="progress-text" id="progressText">0 / 0 项已完成</div>
+</div>
+
+<div class="container">
+
+  <!-- ===== 1. 前端文件完整性 ===== -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-icon" style="background:#5B7CFA">1</span>
+      前端文件完整性
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">index.html 存在且可正常打开<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">浏览器打开后应看到日程页面,左侧 5 个导航图标可切换</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">css/styles.css 存在且样式正常<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">页面应有 ins 风格:白底卡片、圆角、柔和阴影</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">7 个 JS 文件全部存在<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">storage.js / schedule.js / accounting.js / ai-daily.js / language.js / weather.js / app.js</div>
+        <code class="check-code">ls js/*.js  →  应列出 7 个文件</code>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">manifest.json 存在且 JSON 格式正确<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">iOS 加主屏依赖此文件,名称、图标、display:standalone 字段必须存在</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">sw.js 存在且版本号正确<span class="badge badge-info">信息</span></div>
+        <div class="check-desc">CACHE_NAME 应为 workbench-v3,ASSETS 列表应含 11 项</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 2. 前端功能验证 ===== -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-icon" style="background:#00C9A7">2</span>
+      前端功能验证(浏览器内测试)
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">日程模块:添加 + 删除事项<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">点右下角 + → 填写表单 → 提交 → 列表出现新事项;× 可删除。刷新后数据保留</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">记账模块:记一笔 + 汇总更新<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">点 + → 选分类 → 填金额 → 保存。汇总卡金额应变化,分类占比条应更新</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">AI要点模块:显示兜底数据<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">Worker 未部署时应显示示例要闻 + AI PM 知识卡,带原站链接</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">外语模块:Tab 切换 + 文章列表<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">口语练习 / 外刊精读 切换后文章列表应更新,每篇带阅读原文链接</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">皮肤切换:5 套配色即时生效<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">设置页点击默认/薄荷/天空/暖橙/暗夜,全站配色应即时变化,刷新后保留</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">暗夜皮肤:整体切换为深色<span class="badge badge-info">信息</span></div>
+        <div class="check-desc">选暗夜后背景应变黑,文字变白,导航栏深色</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">模块记忆:刷新后回到上次模块<span class="badge badge-info">信息</span></div>
+        <div class="check-desc">切到记账 → 刷新 → 应仍在记账页面</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">天气模块:显示定位状态<span class="badge badge-optional">可选</span></div>
+        <div class="check-desc">Worker 未部署时显示"未连接服务"。允许定位权限后应尝试获取位置</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 3. Worker 部署准备 ===== -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-icon" style="background:#F77737">3</span>
+      Cloudflare Worker 部署准备
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">Node.js 已安装<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">建议 Node 18+ LTS</div>
+        <code class="check-code">node -v  →  v18.x 或更高</code>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">wrangler 已安装并登录<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">Cloudflare CLI 工具</div>
+        <code class="check-code">cd worker && npm install
+npx wrangler login  →  浏览器授权</code>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">KV 命名空间已创建<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">用于存储日程、记账数据及内容缓存</div>
+        <code class="check-code">npx wrangler kv namespace create WORKBENCH_KV
+→  返回 id,填入 wrangler.toml</code>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">wrangler.toml 中 KV ID 已填入<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">将上一步返回的 namespace id 替换 wrangler.toml 中的 YOUR_KV_NAMESPACE_ID</div>
+        <code class="check-code">binding = "WORKBENCH_KV"
+id = "abc123..."  ←  替换这里</code>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">和风天气 API Key 已获取<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">注册和风天气开发者账号,创建应用获取 Key</div>
+        <div class="check-desc">免费版每日 1000 次调用,个人使用足够</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">和风 Key 已通过 secret 设置<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">不要明文写在 wrangler.toml 中,使用 secret 加密存储</div>
+        <code class="check-code">npx wrangler secret put QWEATHER_API_KEY
+→  粘贴你的和风 Key →  回车</code>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">Worker 本地测试通过<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">本地 dev 模式验证 5 个 API 路由均可访问</div>
+        <code class="check-code">npx wrangler dev
+
+# 另开终端测试:
+curl http://localhost:8787/api/news
+curl http://localhost:8787/api/knowledge
+curl "http://localhost:8787/api/weather?lat=39.9&lon=116.4"
+curl http://localhost:8787/api/sync
+curl "http://localhost:8787/api/articles?cat=speaking"</code>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">Worker 已部署到线上<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">部署后获得一个 https://xxx.workers.dev 地址</div>
+        <code class="check-code">npx wrangler deploy
+→  记录输出的 Worker URL</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 4. 前端接入 Worker ===== -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-icon" style="background:#FF8C42">4</span>
+      前端接入 Worker
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">设置页填入 Worker 地址<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">打开工作台 → 设置 → 云同步 → 填入 Worker URL → 保存</div>
+        <code class="check-code">https://personal-workbench.your-name.workers.dev</code>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">上传数据成功<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">点"上传数据"按钮,应显示"上传成功" + 时间戳</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">拉取数据成功<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">点"拉取数据"按钮,应显示成功并自动刷新页面</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">AI要点显示实时资讯<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">刷新页面进入 AI要点,速览和要闻应从 Worker 获取实时数据(非兜底数据)</div>
+        <div class="check-desc">检查:每条要闻有来源标签 + 原站链接</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">外语模块显示实时文章<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">口语练习和外刊精读切换后,文章列表应从 RSS 获取(非兜底数据)</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">天气显示真实城市和温度<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">设置页天气区域应显示实际城市名 + 天气 + 温度(非"未连接服务")</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 5. iOS PWA 部署 ===== -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-icon" style="background:#9B59B6">5</span>
+      iOS PWA 加主屏测试
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">前端部署到 HTTPS 环境<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">iOS PWA 和 Service Worker 均要求 HTTPS。可部署到 Cloudflare Pages、GitHub Pages、Vercel 等</div>
+        <code class="check-code"># Cloudflare Pages 示例:
+# 1. 连接 Git 仓库
+# 2. 构建命令留空(纯静态)
+# 3. 输出目录 = 当前目录</code>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">iPhone Safari 打开页面正常<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">用 iPhone Safari 打开 HTTPS 地址,确认页面显示正常</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">添加到主屏幕<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">Safari → 分享按钮 → 添加到主屏幕 → 桌面出现"工作台"图标</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">主屏图标点击全屏运行<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">点击桌面图标 → 应全屏打开(无 Safari 地址栏和导航栏)</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">安全区域适配正常<span class="badge badge-info">信息</span></div>
+        <div class="check-desc">顶部刘海/底部 Home Indicator 区域不被遮挡</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">离线可基本使用<span class="badge badge-optional">可选</span></div>
+        <div class="check-desc">断网后打开应用,日程和记账的已有数据应可查看(Service Worker 缓存)</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">清缓存后数据恢复<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">清 Safari 缓存 → 重新打开 → 设置页拉取数据 → 日程和记账数据应恢复</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 6. 最终确认 ===== -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-icon" style="background:#E1306C">6</span>
+      最终确认
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">5 个模块全部可用<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">日程 / 记账 / AI要点 / 外语 / 设置 — 每个都打开过,功能正常</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">5 套皮肤全部切换测试<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">默认 / 薄荷 / 天空 / 暖橙 / 暗夜 — 每套都点过,配色正常</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">所有外部链接可跳转<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">AI要闻"查看原文"、外语"阅读原文"链接应打开原网站</div>
+      </div>
+    </div>
+
+    <div class="check-item" onclick="toggle(this)">
+      <div class="check-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="check-content">
+        <div class="check-label">Worker 控制台无报错<span class="badge badge-required">必须</span></div>
+        <div class="check-desc">Cloudflare Dashboard → Workers → 查看 Logs,调用 API 时无异常</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Summary ===== -->
+  <div class="summary" id="summary">
+    <div class="summary-count">
+      <strong id="doneCount">0</strong> / <span id="totalCount">0</span> 项已完成
+    </div>
+    <button class="summary-btn" onclick="resetAll()">重置</button>
+  </div>
+
+</div>
+
+<script>
+  function toggle(el) {
+    el.classList.toggle('done');
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const items = document.querySelectorAll('.check-item');
+    const done = document.querySelectorAll('.check-item.done');
+    const total = items.length;
+    const count = done.length;
+    const pct = total > 0 ? (count / total * 100) : 0;
+
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = count + ' / ' + total + ' 项已完成';
+    document.getElementById('doneCount').textContent = count;
+    document.getElementById('totalCount').textContent = total;
+
+    if (count === total && total > 0) {
+      document.getElementById('progressText').textContent = '全部完成!可以部署了';
+    }
+  }
+
+  function resetAll() {
+    document.querySelectorAll('.check-item').forEach((el) => el.classList.remove('done'));
+    updateProgress();
+  }
+
+  updateProgress();
+</script>
+
+</body>
+</html>

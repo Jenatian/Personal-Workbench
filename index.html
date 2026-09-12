@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light" data-skin="default">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="工作台">
+  <meta name="theme-color" content="#FAFAFA">
+  <link rel="manifest" href="manifest.json">
+
+  <title>个人工作台</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== 左侧导航栏 ===== -->
+  <nav id="sidebar">
+    <a class="nav-item active" data-module="schedule" href="#schedule">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      </span>
+      <span class="nav-label">日程</span>
+    </a>
+    <a class="nav-item" data-module="accounting" href="#accounting">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h2M11 15h4"/></svg>
+      </span>
+      <span class="nav-label">记账</span>
+    </a>
+    <a class="nav-item" data-module="ai-daily" href="#ai-daily">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+      </span>
+      <span class="nav-label">AI要点</span>
+    </a>
+    <a class="nav-item" data-module="language" href="#language">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M10 7h6M10 11h4"/></svg>
+      </span>
+      <span class="nav-label">外语</span>
+    </a>
+    <a class="nav-item" data-module="settings" href="#settings">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </span>
+      <span class="nav-label">设置</span>
+    </a>
+  </nav>
+
+  <!-- ===== 内容区 ===== -->
+  <main id="content">
+
+    <!-- ========== 日程模块 ========== -->
+    <section id="view-schedule" class="view active">
+      <div class="view-header">
+        <h1>日程</h1>
+        <span class="date-badge">--</span>
+      </div>
+
+      <div class="week-strip"></div>
+      <div class="schedule-list"></div>
+
+      <button class="fab" data-action="add-schedule">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </section>
+
+    <!-- ========== 记账模块 ========== -->
+    <section id="view-accounting" class="view">
+      <div class="view-header">
+        <h1>记账</h1>
+        <span class="date-badge">2026年9月</span>
+      </div>
+
+      <div class="summary-card"></div>
+      <div class="card category-card"></div>
+      <div class="entry-list"></div>
+
+      <button class="fab" data-action="add-entry">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </section>
+
+    <!-- ========== 每日AI要点模块 ========== -->
+    <section id="view-ai-daily" class="view">
+      <div class="view-header">
+        <h1>AI要点</h1>
+        <span class="date-badge">--</span>
+      </div>
+
+      <div class="speed-summary">
+        <div class="speed-label">今日速览</div>
+        <div class="speed-text">加载中...</div>
+      </div>
+
+      <div class="section-divider">
+        <h2>今日要闻</h2>
+        <div class="line"></div>
+      </div>
+      <div class="card news-container"></div>
+
+      <div class="section-divider">
+        <h2>今日学习</h2>
+        <div class="line"></div>
+      </div>
+      <div class="knowledge-container"></div>
+    </section>
+
+    <!-- ========== 外语学习模块 ========== -->
+    <section id="view-language" class="view">
+      <div class="view-header">
+        <h1>外语</h1>
+        <span class="date-badge">每日口语</span>
+      </div>
+
+      <div class="lang-tabs">
+        <button class="lang-tab active">口语练习</button>
+        <button class="lang-tab">外刊精读</button>
+      </div>
+
+      <div class="article-list"></div>
+    </section>
+
+    <!-- ========== 其他设置模块 ========== -->
+    <section id="view-settings" class="view">
+      <div class="view-header">
+        <h1>设置</h1>
+      </div>
+
+      <div class="setting-section">
+        <h2>皮肤颜色</h2>
+        <div class="skin-grid">
+          <div class="skin-option active" data-skin="default">
+            <div class="skin-circle" style="background: linear-gradient(135deg, #E1306C, #F77737)"></div>
+            <span class="skin-name">默认</span>
+          </div>
+          <div class="skin-option" data-skin="mint">
+            <div class="skin-circle" style="background: linear-gradient(135deg, #00C9A7, #00B8D9)"></div>
+            <span class="skin-name">薄荷</span>
+          </div>
+          <div class="skin-option" data-skin="sky">
+            <div class="skin-circle" style="background: linear-gradient(135deg, #5B7CFA, #00B8D9)"></div>
+            <span class="skin-name">天空</span>
+          </div>
+          <div class="skin-option" data-skin="orange">
+            <div class="skin-circle" style="background: linear-gradient(135deg, #FF8C42, #FFB627)"></div>
+            <span class="skin-name">暖橙</span>
+          </div>
+          <div class="skin-option" data-skin="dark">
+            <div class="skin-circle" style="background: linear-gradient(135deg, #BB86FC, #03DAC6)"></div>
+            <span class="skin-name">暗夜</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h2>今日天气</h2>
+        <div class="card">
+          <div class="weather-card">
+            <span class="weather-icon">📍</span>
+            <div class="weather-info">
+              <div class="weather-city">正在定位...</div>
+              <div class="weather-desc">等待获取位置信息</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h2>云同步</h2>
+        <div class="card">
+          <div class="card-title">服务地址</div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">
+            填入 Worker 部署地址,启用云同步和实时内容。
+          </div>
+          <div class="form-row">
+            <input class="form-input" type="text" id="api-base-input" placeholder="https://your-worker.workers.dev" style="flex:1">
+            <button class="btn btn-primary" id="api-base-save" style="flex-shrink:0;width:60px">保存</button>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn btn-cancel" id="sync-push" style="flex:1">上传数据</button>
+            <button class="btn btn-cancel" id="sync-pull" style="flex:1">拉取数据</button>
+          </div>
+          <div id="sync-status" style="font-size:12px;color:var(--text-tertiary);margin-top:8px;text-align:center"></div>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h2>关于</h2>
+        <div class="card">
+          <div class="card-title">个人工作台</div>
+          <div style="font-size:14px;color:var(--text-secondary);line-height:1.6">
+            版本 1.0.0<br>
+            加到主屏幕即可全屏使用<br>
+            数据云端同步 · 清缓存不丢失
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===== 日程添加模态框 ===== -->
+<div class="modal-overlay" id="modal-schedule">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">添加日程</div>
+    <form>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">日期</label>
+          <input class="form-input" type="date" name="date" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">时间</label>
+          <input class="form-input" type="time" name="time" placeholder="09:00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">标题</label>
+        <input class="form-input" type="text" name="title" placeholder="如：团队晨会" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注</label>
+        <input class="form-input" type="text" name="desc" placeholder="如：线上 / 30分钟">
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-cancel">取消</button>
+        <button type="submit" class="btn btn-primary">添加</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== 记账添加模态框 ===== -->
+<div class="modal-overlay" id="modal-accounting">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">记一笔</div>
+    <form>
+      <div class="form-group">
+        <label class="form-label">分类</label>
+        <div class="category-picker"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">金额</label>
+        <input class="form-input" type="number" name="amount" placeholder="0.00" step="0.01" min="0" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注</label>
+        <input class="form-input" type="text" name="note" placeholder="如：午餐">
+      </div>
+      <div class="form-group">
+        <label class="form-label">日期</label>
+        <input class="form-input" type="date" name="date" required>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-cancel">取消</button>
+        <button type="submit" class="btn btn-primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/schedule.js"></script>
+<script src="js/accounting.js"></script>
+<script src="js/ai-daily.js"></script>
+<script src="js/language.js"></script>
+<script src="js/weather.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
