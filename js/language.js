@@ -4,7 +4,9 @@
  * 点击文章弹出简要内容弹窗，弹窗内附完整原文链接
  */
 const LanguageModule = (function () {
-  const API_BASE = localStorage.getItem('apiBase') || '';
+  function getApiBase() {
+    return localStorage.getItem('apiBase') || '';
+  }
   let currentTab = 'speaking';
   let currentArticles = [];
 
@@ -44,7 +46,7 @@ const LanguageModule = (function () {
     container.innerHTML = '<div class="empty-state"><div class="empty-text">加载中...</div></div>';
 
     try {
-      var res = await fetch(API_BASE + '/api/articles?cat=' + currentTab, { headers: { 'X-User-Id': getUserId() } });
+      var res = await fetch(getApiBase() + '/api/articles?cat=' + currentTab, { headers: { 'X-User-Id': getUserId() } });
       if (res.ok) {
         var data = await res.json();
         if (data.ok !== false && data.items && data.items.length > 0) {

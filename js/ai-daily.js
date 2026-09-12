@@ -3,7 +3,9 @@
  * Worker 未部署时使用内置示例数据兜底
  */
 const AIDailyModule = (function () {
-  const API_BASE = localStorage.getItem('apiBase') || '';
+  function getApiBase() {
+    return localStorage.getItem('apiBase') || '';
+  }
   const FALLBACK_NEWS = {
     summary: 'Worker 尚未部署，以下为示例数据。部署后将从机器之心、36氪AI、InfoQ、OpenAI、MIT Tech 等来源自动抓取最新 AI 资讯，英文文章自动翻译为中文。',
     items: [
@@ -77,7 +79,7 @@ const AIDailyModule = (function () {
     newsContainer.innerHTML = '';
 
     try {
-      const res = await fetch(API_BASE + '/api/news', { headers: { 'X-User-Id': getUserId() } });
+      const res = await fetch(getApiBase() + '/api/news', { headers: { 'X-User-Id': getUserId() } });
       if (res.ok) {
         const data = await res.json();
         if (data.ok !== false && data.items && data.items.length > 0) {
@@ -118,7 +120,7 @@ const AIDailyModule = (function () {
     container.innerHTML = '<div class="empty-state"><div class="empty-text">加载中...</div></div>';
 
     try {
-      const res = await fetch(API_BASE + '/api/knowledge', { headers: { 'X-User-Id': getUserId() } });
+      const res = await fetch(getApiBase() + '/api/knowledge', { headers: { 'X-User-Id': getUserId() } });
       if (res.ok) {
         const data = await res.json();
         if (data.ok !== false && data.items && data.items.length > 0) {
