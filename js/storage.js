@@ -112,30 +112,46 @@ const Storage = (function () {
     },
   };
 
+  // ===== 带超时的 fetch =====
+  function fetchWithTimeout(url, options, timeout = 10000) {
+    return Promise.race([
+      fetch(url, options),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('请求超时')), timeout)
+      ),
+    ]);
+  }
+
   // ===== 云同步 =====
   async function sync() {
     const apiBase = localStorage.getItem('apiBase') || '';
     const userId = localStorage.getItem('userId') || 'default';
+    if (!apiBase) {
+      return { ok: false, message: '请先填写 Worker 地址并保存' };
+    }
     const data = { schedule: schedule.list(), accounting: accounting.list() };
     try {
-      const res = await fetch(apiBase + SYNC_URL + '?uid=' + userId, {
+      const res = await fetchWithTimeout(apiBase + SYNC_URL + '?uid=' + userId, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
         body: JSON.stringify(data),
-      });
+      }, 10000);
       return await res.json();
     } catch (e) {
-      return { ok: false, message: '网络错误: ' + e.message };
+      return { ok: false, message: '上传失败: ' + e.message };
     }
   }
 
   async function pull() {
     const apiBase = localStorage.getItem('apiBase') || '';
     const userId = localStorage.getItem('userId') || 'default';
+    if (!apiBase) {
+      return { ok: false, message: '请先填写 Worker 地址并保存' };
+    }
     try {
-      const res = await fetch(apiBase + SYNC_URL + '?uid=' + userId, {
+      const res = await fetchWithTimeout(apiBase + SYNC_URL + '?uid=' + userId, {
         headers: { 'X-User-Id': userId },
-      });
+      }, 10000);
       const result = await res.json();
       if (result.ok && result.data) {
         if (result.data.schedule) schedule.save(result.data.schedule);
@@ -143,7 +159,7 @@ const Storage = (function () {
       }
       return result;
     } catch (e) {
-      return { ok: false, message: '网络错误: ' + e.message };
+      return { ok: false, message: '拉取失败: ' + e.message };
     }
   }
 
