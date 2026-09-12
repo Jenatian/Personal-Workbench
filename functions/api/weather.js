@@ -43,18 +43,20 @@ export async function onRequestGet(context) {
 
     const fallback = { city: '获取失败', text: '未知', temp: '--', wind: '' };
 
-    if (wJson.code !== '200' || !wJson.now) {
-      return jsonResponse({ ok: false, error: '天气获取失败 code=' + (wJson.code || 'unknown'), raw: wJson, fallback });
+    if (!wJson || !wJson.condition) {
+      return jsonResponse({ ok: false, error: '天气获取失败', fallback });
     }
 
-    const now = wJson.now;
+    const now = wJson;
     const data = {
       city: wJson.cityName || '当前位置',
-      text: now.text || '未知',
-      temp: now.temp + '°C',
-      wind: (now.windDir || '') + '风 ' + (now.windScale || '') + '级',
-      humidity: now.humidity ? now.humidity + '%' : '',
-      feelsLike: now.feelsLike ? now.feelsLike + '°C' : '',
+      text: now.condition ? (now.condition.text || '未知') : '未知',
+      temp: now.temperature ? now.temperature.value + '°C' : '--',
+      wind: now.wind && now.wind.direction
+        ? (now.wind.direction.compass || '') + '风 ' + (now.wind.scale || '') + '级'
+        : '',
+      humidity: now.humidity ? Math.round(now.humidity * 100) + '%' : '',
+      feelsLike: now.feelsLike ? now.feelsLike.value + '°C' : '',
       updatedAt: new Date().toISOString(),
       fetchedAt: Date.now(),
     };
