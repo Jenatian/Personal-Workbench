@@ -44,7 +44,7 @@ export async function onRequestGet(context) {
     const fallback = { city: '获取失败', text: '未知', temp: '--', wind: '' };
 
     if (wJson.code !== '200' || !wJson.now) {
-      return jsonResponse({ ok: false, error: '天气获取失败', fallback });
+      return jsonResponse({ ok: false, error: '天气获取失败 code=' + (wJson.code || 'unknown'), raw: wJson, fallback });
     }
 
     const now = wJson.now;
