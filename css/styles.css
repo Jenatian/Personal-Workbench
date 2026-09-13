@@ -272,9 +272,37 @@ input { font-family: inherit; }
 /* ===== Schedule Module ===== */
 .week-strip {
   display: flex;
-  justify-content: space-between;
-  gap: 4px;
+  align-items: center;
+  gap: 6px;
   margin-bottom: 20px;
+}
+
+.week-nav {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 3px;
+}
+
+.week-nav:active {
+  transform: scale(0.92);
+}
+
+.week-days-row {
+  flex: 1;
+  display: flex;
+  gap: 4px;
 }
 
 .week-day {
@@ -287,11 +315,17 @@ input { font-family: inherit; }
   border-radius: var(--radius-md);
   background: var(--bg-card);
   box-shadow: var(--shadow-sm);
+  position: relative;
 }
 
 .week-day.today {
   background: var(--accent-gradient);
   color: #fff;
+}
+
+.week-day.selected:not(.today) {
+  border: 2px solid var(--accent-color);
+  padding: 8px 2px;
 }
 
 .week-day .week-label {
@@ -306,6 +340,19 @@ input { font-family: inherit; }
 .week-day .week-num {
   font-size: 16px;
   font-weight: 700;
+}
+
+.week-dot {
+  position: absolute;
+  bottom: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-color);
+}
+
+.week-day.today .week-dot {
+  background: #fff;
 }
 
 .schedule-item {

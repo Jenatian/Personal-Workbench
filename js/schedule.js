@@ -1,8 +1,9 @@
 /**
- * 日程模块 - 增删改查 + 渲染
+ * 日程模块 - 增删改查 + 周切换 + 云同步
  */
 const ScheduleModule = (function () {
   let selectedDate = Storage.formatDate(new Date());
+  let weekBase = new Date(); // 当前周的基准日
 
   function render() {
     renderWeekStrip();
@@ -12,26 +13,53 @@ const ScheduleModule = (function () {
   function renderWeekStrip() {
     const container = document.querySelector('#view-schedule .week-strip');
     if (!container) return;
-    const weekDates = Storage.getWeekDates();
+    const weekDates = Storage.getWeekDates(weekBase);
     const todayStr = Storage.formatDate(new Date());
 
-    container.innerHTML = weekDates.map((d, i) => {
+    let html = '<button class="week-nav" id="week-prev">‹</button>';
+    html += '<div class="week-days-row">';
+    weekDates.forEach((d, i) => {
       const dateStr = Storage.formatDate(d);
       const num = d.getDate();
       const isToday = dateStr === todayStr;
       const isSelected = dateStr === selectedDate;
-      const cls = isToday ? 'week-day today' : (isSelected ? 'week-day selected' : 'week-day');
-      return '<div class="' + cls + '" data-date="' + dateStr + '">' +
+      const hasItems = Storage.schedule.getByDate(dateStr).length > 0;
+      let cls = 'week-day';
+      if (isToday) cls += ' today';
+      if (isSelected) cls += ' selected';
+      html += '<div class="' + cls + '" data-date="' + dateStr + '">' +
         '<span class="week-label">' + Storage.WEEK_LABELS[i] + '</span>' +
         '<span class="week-num">' + num + '</span>' +
+        (hasItems ? '<span class="week-dot"></span>' : '') +
         '</div>';
-    }).join('');
+    });
+    html += '</div>';
+    html += '<button class="week-nav" id="week-next">›</button>';
 
+    container.innerHTML = html;
+
+    // 绑定日期点击
     container.querySelectorAll('.week-day').forEach((el) => {
       el.addEventListener('click', () => {
         selectedDate = el.dataset.date;
         render();
       });
+    });
+
+    // 上一周
+    const prevBtn = container.querySelector('#week-prev');
+    if (prevBtn) prevBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      weekBase.setDate(weekBase.getDate() - 7);
+      render();
+    });
+
+    // 下一周
+    const nextBtn = container.querySelector('#week-next');
+    if (nextBtn) nextBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      weekBase.setDate(weekBase.getDate() + 7);
+      render();
     });
   }
 
@@ -41,7 +69,7 @@ const ScheduleModule = (function () {
     const items = Storage.schedule.getByDate(selectedDate);
 
     if (items.length === 0) {
-      card.innerHTML = '<div class="card"><div class="card-title">今日事项</div>' +
+      card.innerHTML = '<div class="card"><div class="card-title">' + formatDateLabel(selectedDate) + '</div>' +
         '<div class="empty-state"><div class="empty-icon">📋</div>' +
         '<div class="empty-text">这一天还没有安排<br>点击右下角 + 添加</div></div></div>';
       return;
@@ -69,6 +97,8 @@ const ScheduleModule = (function () {
         if (confirm('删除这条日程?')) {
           Storage.schedule.remove(id);
           render();
+          // 自动同步
+          if (isSyncEnabled()) Storage.sync();
         }
       });
     });
@@ -81,7 +111,13 @@ const ScheduleModule = (function () {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const isTomorrow = dateStr === Storage.formatDate(tomorrow);
-    const label = isToday ? '今天' : (isTomorrow ? '明天' : (d.getMonth() + 1) + '月' + d.getDate() + '日');
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = dateStr === Storage.formatDate(yesterday);
+    let label = (d.getMonth() + 1) + '月' + d.getDate() + '日';
+    if (isToday) label = '今天';
+    else if (isTomorrow) label = '明天';
+    else if (isYesterday) label = '昨天';
     return label + '事项';
   }
 
@@ -118,25 +154,29 @@ const ScheduleModule = (function () {
     if (!data.title) return;
     Storage.schedule.add(data);
     selectedDate = data.date;
+    // 如果新选的日期不在当前周,跳到那一周
+    const newDate = new Date(data.date);
+    const weekDates = Storage.getWeekDates(weekBase);
+    const weekStart = Storage.formatDate(weekDates[0]);
+    const weekEnd = Storage.formatDate(weekDates[6]);
+    if (data.date < weekStart || data.date > weekEnd) {
+      weekBase = new Date(newDate);
+    }
     hideModal();
     render();
-    updateDateBadge();
+    // 自动同步
+    if (isSyncEnabled()) Storage.sync();
   }
 
-  function updateDateBadge() {
-    const badge = document.querySelector('#view-schedule .date-badge');
-    if (!badge) return;
-    const d = new Date(selectedDate);
-    const weeks = ['日', '一', '二', '三', '四', '五', '六'];
-    badge.textContent = (d.getMonth() + 1) + '月' + d.getDate() + '日 周' + weeks[d.getDay()];
+  function isSyncEnabled() {
+    const apiBase = localStorage.getItem('apiBase');
+    // apiBase 为空说明用 Pages 同源 API,也是启用的
+    return apiBase !== null && apiBase !== undefined;
   }
 
   function init() {
     render();
-    updateDateBadge();
 
-    const fab = document.querySelector('#view-accounting .fab');
-    // schedule 的 FAB
     const scheduleFab = document.querySelector('#view-schedule .fab');
     if (scheduleFab) {
       scheduleFab.addEventListener('click', showAddModal);

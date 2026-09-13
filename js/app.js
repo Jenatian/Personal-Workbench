@@ -90,6 +90,14 @@
       });
     });
 
+    // 自动从云端拉取数据(静默,失败不影响使用)
+    if (typeof Storage !== 'undefined' && localStorage.getItem('apiBase') !== null) {
+      Storage.pull().then(() => {
+        if (typeof ScheduleModule !== 'undefined') ScheduleModule.render();
+        if (typeof AccountingModule !== 'undefined') AccountingModule.render();
+      }).catch(() => {});
+    }
+
     // 初始化各功能模块
     if (typeof ScheduleModule !== 'undefined') ScheduleModule.init();
     if (typeof AccountingModule !== 'undefined') AccountingModule.init();

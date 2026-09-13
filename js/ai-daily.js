@@ -7,33 +7,27 @@ const AIDailyModule = (function () {
     return localStorage.getItem('apiBase') || '';
   }
   const FALLBACK_NEWS = {
-    summary: 'Worker 尚未部署，以下为示例数据。部署后将从机器之心、36氪AI、InfoQ、OpenAI、MIT Tech 等来源自动抓取最新 AI 资讯，英文文章自动翻译为中文。',
+    summary: '以下为示例数据。部署后将从机器之心、36氪AI、量子位、InfoQ、极客公园等中文源自动抓取最新 AI 资讯，每天零点更新。',
     items: [
       {
         source: '机器之心',
         title: '大模型行业再迎变革：多模态能力成为标配',
-        titleZh: '大模型行业再迎变革：多模态能力成为标配',
         summary: '随着GPT-4o、Gemini等模型陆续支持图片、音频、视频理解，多模态能力正从差异化竞争转为行业标配。',
-        summaryZh: '随着GPT-4o、Gemini等模型陆续支持图片、音频、视频理解，多模态能力正从差异化竞争转为行业标配。',
         link: 'https://www.jiqizhixin.com/articles/2024-12-01',
         date: '',
       },
       {
         source: '36氪AI',
         title: 'AI Agent赛道爆发，国内创业公司密集融资',
-        titleZh: 'AI Agent赛道爆发，国内创业公司密集融资',
         summary: '2024年下半年，AI Agent方向融资事件超30起，覆盖客服、数据分析、代码生成等场景。',
-        summaryZh: '2024年下半年，AI Agent方向融资事件超30起，覆盖客服、数据分析、代码生成等场景。',
         link: 'https://36kr.com/p/ai-agent-funding',
         date: '',
       },
       {
-        source: 'OpenAI',
-        title: 'OpenAI launches new reasoning model with enhanced capabilities',
-        titleZh: 'OpenAI 发布新推理模型，能力大幅提升',
-        summary: 'The new model demonstrates significant improvements in math, coding, and multi-step reasoning tasks.',
-        summaryZh: '新模型在数学、编程和多步推理任务中表现显著提升，支持更复杂的问题解决场景。',
-        link: 'https://openai.com/blog/new-reasoning-model',
+        source: '量子位',
+        title: '国产大模型最新进展：性能追平国际一线',
+        summary: '多家国内大模型公司发布新版本，在多项基准测试中表现接近或达到国际一线水平。',
+        link: 'https://www.qbitai.com/2024/12/01',
         date: '',
       },
     ],
@@ -99,14 +93,12 @@ const AIDailyModule = (function () {
   function renderNewsItems(items, container) {
     if (!container) return;
     container.innerHTML = items.map(function (item) {
-      var displayTitle = item.titleZh || item.title;
-      var displaySummary = item.summaryZh || item.summary;
-      var isTranslated = item.titleZh && item.title !== item.titleZh;
+      var displayTitle = item.title;
+      var displaySummary = item.summary || '';
       return '<div class="news-item">' +
         '<span class="news-source-tag">' + escapeHtml(item.source) + '</span>' +
         '<div class="news-content">' +
         '<div class="news-title">' + escapeHtml(displayTitle) + '</div>' +
-        (isTranslated ? '<div class="news-original-title" style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">' + escapeHtml(item.title) + '</div>' : '') +
         (displaySummary ? '<div class="news-summary">' + escapeHtml(displaySummary) + '</div>' : '') +
         (item.link ? '<a class="news-link" href="' + escapeHtml(item.link) + '" target="_blank">查看原文 →</a>' : '') +
         '</div></div>';

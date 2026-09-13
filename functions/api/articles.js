@@ -25,6 +25,19 @@ function cleanExcerpt(text) {
   return (text || '').replace(/\s+/g, ' ').trim();
 }
 
+function isHomepageLink(link, feedUrl) {
+  if (!link) return true;
+  try {
+    const u = new URL(link);
+    const path = u.pathname.replace(/\/+$/, '');
+    // 只有域名根路径(/)或空路径,算首页链接
+    if (path === '' || path === '/') return true;
+    return false;
+  } catch (e) {
+    return true;
+  }
+}
+
 export async function onRequestGet(context) {
   const { request, env, waitUntil } = context;
 
@@ -63,6 +76,8 @@ export async function onRequestGet(context) {
           if (count >= 4) break;
           const title = cleanTitle(item.title);
           if (!title || title.length < 5) continue;
+          // 过滤掉只有首页链接的文章
+          if (isHomepageLink(item.link, feed.url)) continue;
           // 去重
           const titleKey = title.toLowerCase().slice(0, 50);
           if (seenTitles.has(titleKey)) continue;

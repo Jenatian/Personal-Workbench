@@ -107,9 +107,16 @@ const AccountingModule = (function () {
         if (confirm('删除这条记录?')) {
           Storage.accounting.remove(btn.dataset.id);
           render();
+          autoSync();
         }
       });
     });
+  }
+
+  function autoSync() {
+    if (localStorage.getItem('apiBase') !== null) {
+      Storage.sync().catch(() => {});
+    }
   }
 
   function showAddModal() {
@@ -159,6 +166,7 @@ const AccountingModule = (function () {
     Storage.accounting.add(data);
     hideModal();
     render();
+    autoSync();
   }
 
   function formatMoney(n) {
