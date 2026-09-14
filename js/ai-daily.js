@@ -7,7 +7,7 @@ const AIDailyModule = (function () {
     return localStorage.getItem('apiBase') || '';
   }
   const FALLBACK_NEWS = {
-    summary: '以下为示例数据。部署后将从机器之心、36氪AI、量子位、InfoQ、极客公园等中文源自动抓取最新 AI 资讯，每天零点更新。',
+    summary: '以下为示例数据。部署后将自动汇总多个来源近两天的 AI 资讯，按热度排序并用 AI 生成摘要。',
     items: [
       {
         source: '机器之心',
@@ -95,12 +95,23 @@ const AIDailyModule = (function () {
     container.innerHTML = items.map(function (item) {
       var displayTitle = item.title;
       var displaySummary = item.summary || '';
-      return '<div class="news-item">' +
+
+      var heatBadge = '';
+      if (item.heatLevel === 'high') {
+        heatBadge = '<span class="heat-badge heat-high">🔥 多源报道</span>';
+      } else if (item.heatLevel === 'medium') {
+        heatBadge = '<span class="heat-badge heat-medium">· 热门</span>';
+      }
+
+      return '<div class="news-item' + (item.heatLevel === 'high' ? ' hot' : '') + '">' +
         '<span class="news-source-tag">' + escapeHtml(item.source) + '</span>' +
         '<div class="news-content">' +
         '<div class="news-title">' + escapeHtml(displayTitle) + '</div>' +
         (displaySummary ? '<div class="news-summary">' + escapeHtml(displaySummary) + '</div>' : '') +
+        '<div class="news-meta">' +
+        heatBadge +
         (item.link ? '<a class="news-link" href="' + escapeHtml(item.link) + '" target="_blank">查看原文 →</a>' : '') +
+        '</div>' +
         '</div></div>';
     }).join('');
   }

@@ -301,6 +301,10 @@ const ScheduleModule = (function () {
   }
 
   function autoSync() {
+    const apiBase = localStorage.getItem('apiBase') || '';
+    if (apiBase.indexOf('workers.dev') !== -1) {
+      localStorage.removeItem('apiBase');
+    }
     Storage.sync().catch(() => {});
   }
 

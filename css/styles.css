@@ -595,6 +595,83 @@ input { font-family: inherit; }
   color: var(--text-tertiary);
 }
 
+/* ===== Accounting View Tabs ===== */
+.acc-tab {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.acc-tab.active {
+  background: var(--bg-primary);
+  color: var(--accent-color);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Week strip amount in day view */
+.week-amount {
+  font-size: 10px;
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+.week-day.today .week-amount {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.week-day.selected .week-amount {
+  color: var(--accent-color);
+}
+
+/* Week view day total */
+.wdr-day-total {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.wdr-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.wdr-cat-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+/* Month view cell amount */
+.acc-cell {
+  position: relative;
+}
+
+.cal-amount {
+  font-size: 9px;
+  color: var(--accent-color);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.acc-cell.selected .cal-amount {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.acc-cell.today .cal-amount {
+  color: var(--accent-color);
+}
+
 .schedule-item {
   display: flex;
   align-items: stretch;
@@ -819,10 +896,41 @@ input { font-family: inherit; }
 .news-content .news-link {
   font-size: 12px;
   color: var(--accent);
-  margin-top: 6px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+.news-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.heat-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.heat-badge.heat-high {
+  color: #FF4500;
+  background: rgba(255, 69, 0, 0.08);
+}
+
+.heat-badge.heat-medium {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.news-item.hot {
+  background: rgba(255, 69, 0, 0.03);
+  border-radius: var(--radius-sm);
+  padding: 14px 10px;
+  margin: 0 -10px;
 }
 
 .knowledge-card {

@@ -113,18 +113,28 @@ const Storage = (function () {
   };
 
   // ===== 带超时的 fetch =====
-  function fetchWithTimeout(url, options, timeout = 10000) {
+  function fetchWithTimeout(url, options, timeout = 15000) {
+    const opts = Object.assign({ cache: 'no-store' }, options);
     return Promise.race([
-      fetch(url, options),
+      fetch(url, opts),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error('请求超时')), timeout)
       ),
     ]);
   }
 
+  function getApiBase() {
+    const stored = localStorage.getItem('apiBase') || '';
+    if (stored && stored.indexOf('workers.dev') !== -1) {
+      localStorage.removeItem('apiBase');
+      return '';
+    }
+    return stored;
+  }
+
   // ===== 云同步 =====
   async function sync() {
-    const apiBase = localStorage.getItem('apiBase') || '';
+    const apiBase = getApiBase();
     const userId = localStorage.getItem('userId') || 'default';
     const data = { schedule: schedule.list(), accounting: accounting.list() };
     try {
@@ -132,7 +142,7 @@ const Storage = (function () {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
         body: JSON.stringify(data),
-      }, 10000);
+      }, 15000);
       return await res.json();
     } catch (e) {
       return { ok: false, message: '上传失败: ' + e.message };
@@ -140,12 +150,12 @@ const Storage = (function () {
   }
 
   async function pull() {
-    const apiBase = localStorage.getItem('apiBase') || '';
+    const apiBase = getApiBase();
     const userId = localStorage.getItem('userId') || 'default';
     try {
       const res = await fetchWithTimeout(apiBase + SYNC_URL + '?uid=' + userId, {
         headers: { 'X-User-Id': userId },
-      }, 10000);
+      }, 15000);
       const result = await res.json();
       if (result.ok && result.data) {
         if (result.data.schedule) schedule.save(result.data.schedule);

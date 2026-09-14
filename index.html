@@ -81,12 +81,19 @@
     <section id="view-accounting" class="view">
       <div class="view-header">
         <h1>记账</h1>
-        <span class="date-badge">2026年9月</span>
+        <span class="date-badge">--</span>
       </div>
 
       <div class="summary-card"></div>
       <div class="card category-card"></div>
-      <div class="entry-list"></div>
+
+      <div class="schedule-tabs">
+        <button class="acc-tab active" data-view="day">日</button>
+        <button class="acc-tab" data-view="week">周</button>
+        <button class="acc-tab" data-view="month">月</button>
+      </div>
+
+      <div class="acc-content"></div>
 
       <button class="fab" data-action="add-entry">
         <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>

@@ -133,14 +133,21 @@
 
     if (pushBtn) {
       pushBtn.addEventListener('click', async () => {
-        if (statusEl) { statusEl.textContent = '正在上传...'; statusEl.style.color = 'var(--text-secondary)'; }
+        const apiBase = localStorage.getItem('apiBase') || '';
+        if (apiBase.indexOf('workers.dev') !== -1) { localStorage.removeItem('apiBase'); }
+        const cleanBase = localStorage.getItem('apiBase') || '';
+        const userId = localStorage.getItem('userId') || 'default';
+        const url = cleanBase + '/api/sync?uid=' + userId;
+        if (statusEl) { statusEl.textContent = '正在上传... URL: ' + url; statusEl.style.color = 'var(--text-secondary)'; }
+        const t0 = Date.now();
         const result = await Storage.sync();
+        const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
         if (statusEl) {
           if (result.ok) {
-            statusEl.textContent = '上传成功 ' + new Date().toLocaleTimeString();
+            statusEl.textContent = '上传成功 (' + elapsed + 's) ' + new Date().toLocaleTimeString();
             statusEl.style.color = 'var(--accent)';
           } else {
-            statusEl.textContent = '上传失败: ' + (result.message || '未知错误');
+            statusEl.textContent = '上传失败: ' + (result.message || '未知错误') + ' (' + elapsed + 's)';
             statusEl.style.color = '#E74C3C';
           }
         }
@@ -149,15 +156,22 @@
 
     if (pullBtn) {
       pullBtn.addEventListener('click', async () => {
-        if (statusEl) { statusEl.textContent = '正在拉取...'; statusEl.style.color = 'var(--text-secondary)'; }
+        const apiBase = localStorage.getItem('apiBase') || '';
+        if (apiBase.indexOf('workers.dev') !== -1) { localStorage.removeItem('apiBase'); }
+        const cleanBase = localStorage.getItem('apiBase') || '';
+        const userId = localStorage.getItem('userId') || 'default';
+        const url = cleanBase + '/api/sync?uid=' + userId;
+        if (statusEl) { statusEl.textContent = '正在拉取... URL: ' + url; statusEl.style.color = 'var(--text-secondary)'; }
+        const t0 = Date.now();
         const result = await Storage.pull();
+        const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
         if (statusEl) {
           if (result.ok) {
-            statusEl.textContent = '拉取成功,正在刷新...';
+            statusEl.textContent = '拉取成功 (' + elapsed + 's),正在刷新...';
             statusEl.style.color = 'var(--accent)';
             setTimeout(() => { window.location.reload(); }, 800);
           } else {
-            statusEl.textContent = '拉取失败: ' + (result.message || '未知错误');
+            statusEl.textContent = '拉取失败: ' + (result.message || '未知错误') + ' (' + elapsed + 's) URL: ' + url;
             statusEl.style.color = '#E74C3C';
           }
         }

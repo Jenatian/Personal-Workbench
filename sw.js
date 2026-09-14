@@ -1,4 +1,4 @@
-const CACHE_NAME = 'workbench-v7';
+const CACHE_NAME = 'workbench-v11';
 const ASSETS = [
   './',
   './index.html',
@@ -32,16 +32,8 @@ self.addEventListener('fetch', (e) => {
 
   const url = new URL(e.request.url);
 
-  // API 请求不走缓存,直接网络请求
+  // API 请求完全不拦截,让浏览器直接处理
   if (url.pathname.startsWith('/api/')) {
-    e.respondWith(
-      fetch(e.request).catch(() =>
-        new Response(JSON.stringify({ ok: false, error: '网络错误' }), {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      )
-    );
     return;
   }
 
