@@ -355,6 +355,246 @@ input { font-family: inherit; }
   background: #fff;
 }
 
+/* ===== Schedule View Tabs ===== */
+.schedule-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 3px;
+  box-shadow: var(--shadow-sm);
+}
+
+.schedule-tab {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.schedule-tab.active {
+  background: var(--bg-primary);
+  color: var(--accent-color);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ===== Week View ===== */
+.week-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.week-range-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 140px;
+  text-align: center;
+}
+
+.week-day-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.week-day-row:active {
+  transform: scale(0.98);
+}
+
+.week-day-row.today {
+  border-left: 3px solid var(--accent-color);
+}
+
+.wdr-left {
+  flex-shrink: 0;
+  width: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wdr-weekday {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.wdr-date {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.wdr-today-tag {
+  font-size: 10px;
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+.wdr-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wdr-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wdr-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.wdr-title {
+  font-size: 14px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wdr-more {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.wdr-empty {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+/* ===== Month View ===== */
+.month-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.month-range-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 120px;
+  text-align: center;
+}
+
+.calendar-grid {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.cal-header-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.cal-header {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  padding: 4px 0;
+}
+
+.cal-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cal-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s;
+}
+
+.cal-cell.empty {
+  cursor: default;
+}
+
+.cal-cell:not(.empty):active {
+  background: var(--bg-secondary);
+}
+
+.cal-cell.today {
+  background: var(--accent-light);
+}
+
+.cal-cell.today .cal-day-num {
+  color: var(--accent-color);
+  font-weight: 800;
+}
+
+.cal-cell.selected {
+  background: var(--accent-gradient);
+}
+
+.cal-cell.selected .cal-day-num {
+  color: #fff;
+}
+
+.cal-cell.selected .cal-count {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.cal-day-num {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cal-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-color);
+}
+
+.cal-cell.selected .cal-dot {
+  background: #fff;
+}
+
+.cal-count {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
 .schedule-item {
   display: flex;
   align-items: stretch;
@@ -385,9 +625,9 @@ input { font-family: inherit; }
   flex-shrink: 0;
 }
 
-.schedule-content { flex: 1; }
+.schedule-content-cell { flex: 1; }
 
-.schedule-content .item-title {
+.schedule-content-cell .item-title {
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 2px;
