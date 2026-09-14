@@ -84,16 +84,16 @@ async function generateAISummary(env, topItems) {
     (item.summary ? ' - ' + item.summary : '')
   ).join('\n');
 
-  const prompt = '你是AI行业分析师。请基于以下今日AI新闻，用2-3句话中文总结今天AI圈发生了什么重要事件，突出趋势和关键信息，不要罗列标题：\n\n' + newsText;
+  const prompt = '以下是最新的AI行业新闻，请直接用中文写一段2-3句话的总结，概括今天AI圈的核心动态。不要输出思考过程，不要罗列标题，直接给总结：\n\n' + newsText;
 
   for (const model of AI_MODELS) {
     try {
       const aiRes = await env.AI.run(model, {
         messages: [
-          { role: 'system', content: '你是专业的AI行业分析师，擅长简洁有力地总结新闻要点。' },
+          { role: 'system', content: '你直接输出新闻总结，不输出任何思考过程或分析步骤。' },
           { role: 'user', content: prompt },
         ],
-        max_tokens: 300,
+        max_tokens: 500,
       });
 
       let result = '';
