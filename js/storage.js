@@ -62,6 +62,19 @@ const Storage = (function () {
     getByDate(dateStr) {
       return this.list().filter((i) => i.date === dateStr);
     },
+    toggleComplete(id) {
+      const items = this.list();
+      const idx = items.findIndex((i) => i.id === id);
+      if (idx === -1) return null;
+      items[idx].completed = !items[idx].completed;
+      if (items[idx].completed) {
+        items[idx].completedAt = new Date().toISOString();
+      } else {
+        delete items[idx].completedAt;
+      }
+      this.save(items);
+      return items[idx];
+    },
   };
 
   // ===== 记账数据 =====

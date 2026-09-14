@@ -715,6 +715,53 @@ input { font-family: inherit; }
   color: var(--text-secondary);
 }
 
+/* Schedule completion */
+.schedule-item.completed .item-title,
+.schedule-item.completed .item-desc {
+  text-decoration: line-through;
+  color: var(--text-tertiary);
+}
+
+.schedule-item.completed .schedule-time {
+  color: var(--text-tertiary);
+}
+
+.schedule-dot.done {
+  background: var(--text-tertiary);
+}
+
+.item-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: transparent;
+  color: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.item-check.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.done-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  margin-left: 4px;
+}
+
 /* ===== Accounting Module ===== */
 .summary-card {
   background: var(--accent-gradient);

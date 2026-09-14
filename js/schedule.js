@@ -65,21 +65,31 @@ const ScheduleModule = (function () {
     html += '</div>';
 
     const items = Storage.schedule.getByDate(selectedDate);
+    // Sort: incomplete first, then completed
+    items.sort((a, b) => {
+      if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+      return (a.time || '').localeCompare(b.time || '');
+    });
+
     html += '<div class="schedule-list">';
     if (items.length === 0) {
       html += '<div class="card"><div class="card-title">' + formatDateLabel(selectedDate) + '</div>' +
         '<div class="empty-state"><div class="empty-icon">\uD83D\uDCCB</div>' +
         '<div class="empty-text">\u8FD9\u4E00\u5929\u8FD8\u6CA1\u6709\u5B89\u6392<br>\u70B9\u51FB\u53F3\u4E0B\u89D2 + \u6DFB\u52A0</div></div></div>';
     } else {
-      html += '<div class="card"><div class="card-title">' + formatDateLabel(selectedDate) + '</div>';
+      const doneCount = items.filter((i) => i.completed).length;
+      html += '<div class="card"><div class="card-title">' + formatDateLabel(selectedDate) +
+        (doneCount > 0 ? ' <span class="done-count">\u2713 ' + doneCount + '/' + items.length + '</span>' : '') + '</div>';
       items.forEach((item) => {
-        html += '<div class="schedule-item" data-id="' + item.id + '">' +
+        html += '<div class="schedule-item' + (item.completed ? ' completed' : '') + '" data-id="' + item.id + '">' +
           '<div class="schedule-time">' + escapeHtml(item.time || '') + '</div>' +
-          '<div class="schedule-dot"></div>' +
+          '<div class="schedule-dot' + (item.completed ? ' done' : '') + '"></div>' +
           '<div class="schedule-content-cell">' +
           '<div class="item-title">' + escapeHtml(item.title) + '</div>' +
           '<div class="item-desc">' + escapeHtml(item.desc || '') + '</div>' +
           '</div>' +
+          '<button class="item-check' + (item.completed ? ' checked' : '') + '" data-id="' + item.id + '">' +
+          (item.completed ? '\u2713' : '') + '</button>' +
           '<button class="item-delete" data-id="' + item.id + '">\u00d7</button>' +
           '</div>';
       });
@@ -206,17 +216,26 @@ const ScheduleModule = (function () {
     html += '</div>';
 
     const selectedItems = Storage.schedule.getByDate(selectedDate);
+    selectedItems.sort((a, b) => {
+      if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+      return (a.time || '').localeCompare(b.time || '');
+    });
+
     html += '<div class="schedule-list">';
     if (selectedItems.length > 0) {
-      html += '<div class="card"><div class="card-title">' + formatDateLabel(selectedDate) + '</div>';
+      const doneCount = selectedItems.filter((i) => i.completed).length;
+      html += '<div class="card"><div class="card-title">' + formatDateLabel(selectedDate) +
+        (doneCount > 0 ? ' <span class="done-count">\u2713 ' + doneCount + '/' + selectedItems.length + '</span>' : '') + '</div>';
       selectedItems.forEach((item) => {
-        html += '<div class="schedule-item" data-id="' + item.id + '">' +
+        html += '<div class="schedule-item' + (item.completed ? ' completed' : '') + '" data-id="' + item.id + '">' +
           '<div class="schedule-time">' + escapeHtml(item.time || '') + '</div>' +
-          '<div class="schedule-dot"></div>' +
+          '<div class="schedule-dot' + (item.completed ? ' done' : '') + '"></div>' +
           '<div class="schedule-content-cell">' +
           '<div class="item-title">' + escapeHtml(item.title) + '</div>' +
           '<div class="item-desc">' + escapeHtml(item.desc || '') + '</div>' +
           '</div>' +
+          '<button class="item-check' + (item.completed ? ' checked' : '') + '" data-id="' + item.id + '">' +
+          (item.completed ? '\u2713' : '') + '</button>' +
           '<button class="item-delete" data-id="' + item.id + '">\u00d7</button>' +
           '</div>';
       });
@@ -269,6 +288,16 @@ const ScheduleModule = (function () {
           render();
           autoSync();
         }
+      });
+    });
+
+    container.querySelectorAll('.item-check').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        Storage.schedule.toggleComplete(id);
+        render();
+        autoSync();
       });
     });
   }
