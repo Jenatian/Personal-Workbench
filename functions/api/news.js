@@ -1,11 +1,10 @@
 import { jsonResponse, errorResponse, corsHeaders, parseRSS, translateWithAI } from '../_utils';
 
 const FEEDS = [
-  { source: '机器之心', url: 'https://www.jiqizhixin.com/rss', lang: 'zh' },
-  { source: '36氪', url: 'https://36kr.com/feed', lang: 'zh' },
   { source: '量子位', url: 'https://www.qbitai.com/feed', lang: 'zh' },
-  { source: 'InfoQ', url: 'https://www.infoq.cn/rss.xml', lang: 'zh' },
   { source: '极客公园', url: 'https://www.geekpark.net/rss', lang: 'zh' },
+  { source: 'IT之家', url: 'https://www.ithome.com/rss/', lang: 'zh' },
+  { source: '虎嗅', url: 'https://rsshub.app/huxiu/article', lang: 'zh' },
   { source: 'OpenAI', url: 'https://openai.com/blog/rss.xml', lang: 'en' },
   { source: 'TechCrunch', url: 'https://techcrunch.com/category/artificial-intelligence/feed/', lang: 'en' },
 ];
@@ -73,10 +72,8 @@ function isWithinDays(dateStr, days) {
 }
 
 const AI_MODELS = [
-  '@cf/meta/llama-3.1-8b-instruct',
-  '@cf/meta/llama-3-8b-instruct',
-  '@cf/meta/mistral-7b-instruct-v0.2',
-  '@cf/meta/qwen1.5-7b-chat',
+  '@cf/zai-org/glm-4.7-flash',
+  '@cf/qwen/qwq-32b',
 ];
 
 async function generateAISummary(env, topItems) {

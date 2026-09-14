@@ -872,6 +872,8 @@ input { font-family: inherit; }
   border-radius: 6px;
   height: fit-content;
   white-space: nowrap;
+  min-width: 48px;
+  text-align: center;
 }
 
 .news-content { flex: 1; }
