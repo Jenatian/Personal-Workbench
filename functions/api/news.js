@@ -7,7 +7,7 @@ const FEEDS = [
   { source: 'InfoQ', url: 'https://www.infoq.cn/rss.xml', lang: 'zh' },
   { source: '极客公园', url: 'https://www.geekpark.net/rss', lang: 'zh' },
   { source: 'OpenAI', url: 'https://openai.com/blog/rss.xml', lang: 'en' },
-  { source: 'VentureBeat', url: 'https://venturebeat.com/category/ai/feed/', lang: 'en' },
+  { source: 'TechCrunch', url: 'https://techcrunch.com/category/artificial-intelligence/feed/', lang: 'en' },
 ];
 
 const STOP_WORDS = new Set([
@@ -17,9 +17,11 @@ const STOP_WORDS = new Set([
   '什么', '怎么', '为什么', '多少', '哪些',
   '进行', '通过', '关于', '对于', '根据', '目前', '未来', '之后',
   '表示', '认为', '指出', '宣布', '发布', '推出', '上线', '开放',
+  '今日', '昨日', '今天', '昨天', '今年', '明年',
   'the', 'and', 'for', 'with', 'that', 'this', 'from', 'are', 'was',
   'will', 'new', 'says', 'has', 'its', 'not', 'but', 'all', 'can',
-  'how', 'why', 'what', 'who', 'via', 'into',
+  'how', 'why', 'what', 'who', 'via', 'into', 'ai', 'artificial',
+  'intelligence', 'more', 'than', 'has', 'have', 'been', 'also',
 ]);
 
 function extractKeywords(text) {
@@ -49,7 +51,7 @@ function computeHeat(items) {
       if (items[j].source === item.source) continue;
 
       const overlap = allKeywords[i].filter((k) => allKeywords[j].indexOf(k) !== -1);
-      if (overlap.length >= 2) {
+      if (overlap.length >= 1) {
         heat += overlap.length;
         sourceSet.add(items[j].source);
       }
@@ -70,30 +72,46 @@ function isWithinDays(dateStr, days) {
   return diff >= 0 && diff <= days;
 }
 
+const AI_MODELS = [
+  '@cf/meta/llama-3.1-8b-instruct',
+  '@cf/meta/llama-3-8b-instruct',
+  '@cf/meta/mistral-7b-instruct-v0.2',
+  '@cf/meta/qwen1.5-7b-chat',
+];
+
 async function generateAISummary(env, topItems) {
   if (!env.AI || topItems.length === 0) return '';
 
-  try {
-    const newsText = topItems.slice(0, 10).map((item, i) =>
-      (i + 1) + '. [' + item.source + '] ' + item.title +
-      (item.summary ? ' - ' + item.summary : '')
-    ).join('\n');
+  const newsText = topItems.slice(0, 10).map((item, i) =>
+    (i + 1) + '. [' + item.source + '] ' + item.title +
+    (item.summary ? ' - ' + item.summary : '')
+  ).join('\n');
 
-    const prompt = '你是AI行业分析师。请基于以下今日AI新闻标题和摘要，用2-3句话中文总结今天AI圈发生了什么重要事件，突出趋势和关键信息，不要简单罗列标题：\n\n' + newsText;
+  const prompt = '你是AI行业分析师。请基于以下今日AI新闻，用2-3句话中文总结今天AI圈发生了什么重要事件，突出趋势和关键信息，不要罗列标题：\n\n' + newsText;
 
-    const aiRes = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: '你是一位专业的AI行业分析师，擅长简洁有力地总结新闻要点。' },
-        { role: 'user', content: prompt },
-      ],
-      max_tokens: 300,
-    });
+  for (const model of AI_MODELS) {
+    try {
+      const aiRes = await env.AI.run(model, {
+        messages: [
+          { role: 'system', content: '你是专业的AI行业分析师，擅长简洁有力地总结新闻要点。' },
+          { role: 'user', content: prompt },
+        ],
+        max_tokens: 300,
+      });
 
-    const result = aiRes.response || aiRes.result || '';
-    return result.trim();
-  } catch (e) {
-    return '';
+      let result = '';
+      if (typeof aiRes === 'string') result = aiRes;
+      else if (aiRes && aiRes.response) result = aiRes.response;
+      else if (aiRes && aiRes.result) result = aiRes.result;
+
+      result = result.trim();
+      if (result.length > 10) return result;
+    } catch (e) {
+      // try next model
+    }
   }
+
+  return '';
 }
 
 export async function onRequestGet(context) {
@@ -121,11 +139,17 @@ export async function onRequestGet(context) {
     const items = [];
     const sourceStatus = {};
 
+    const fetchHeaders = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+    };
+
     const fetchTasks = FEEDS.map(async (feed) => {
       try {
         const res = await fetch(feed.url, {
           cf: { cacheTtl: 1800 },
-          headers: { 'User-Agent': 'Mozilla/5.0 WorkbenchBot/1.0' },
+          headers: fetchHeaders,
         });
         if (!res.ok) {
           sourceStatus[feed.source] = 'fail:' + res.status;
@@ -167,6 +191,10 @@ export async function onRequestGet(context) {
     if (filtered.length < 5) {
       filtered = items.filter((item) => isWithinDays(item.date, 7));
     }
+    // If still too few, use all items
+    if (filtered.length < 3) {
+      filtered = items;
+    }
 
     // Compute heat scores
     computeHeat(filtered);
@@ -181,6 +209,7 @@ export async function onRequestGet(context) {
 
     // Generate AI summary
     let summary = await generateAISummary(env, top);
+    let aiModelUsed = summary ? true : false;
 
     if (!summary) {
       const sources = [...new Set(top.slice(0, 5).map((i) => i.source))];
@@ -190,6 +219,7 @@ export async function onRequestGet(context) {
 
     const data = {
       summary,
+      aiSummary: aiModelUsed,
       items: top,
       date: today,
       fetchedAt: Date.now(),

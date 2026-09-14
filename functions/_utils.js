@@ -47,6 +47,8 @@ export function extractTag(xml, tag) {
 
 export function parseRSS(xml) {
   const items = [];
+
+  // RSS 2.0: <item> tags
   const itemRegex = /<item[\s\S]*?<\/item>/gi;
   const matches = xml.match(itemRegex) || [];
   for (const match of matches) {
@@ -58,6 +60,24 @@ export function parseRSS(xml) {
       items.push({ title, link, summary: description, date: pubDate });
     }
   }
+
+  // Atom: <entry> tags (if no RSS items found)
+  if (items.length === 0) {
+    const entryRegex = /<entry[\s\S]*?<\/entry>/gi;
+    const entryMatches = xml.match(entryRegex) || [];
+    for (const match of entryMatches) {
+      const title = extractTag(match, 'title');
+      // Atom link is in <link href="..." /> attribute
+      const linkMatch = match.match(/<link[^>]*href=["']([^"']+)["'][^>]*>/i);
+      const link = linkMatch ? linkMatch[1] : '';
+      const summary = extractTag(match, 'summary') || extractTag(match, 'content');
+      const pubDate = extractTag(match, 'published') || extractTag(match, 'updated');
+      if (title && link) {
+        items.push({ title, link, summary, date: pubDate });
+      }
+    }
+  }
+
   return items;
 }
 
