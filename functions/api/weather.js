@@ -8,8 +8,8 @@ export async function onRequestGet(context) {
   }
 
   const url = new URL(request.url);
-  const lat = url.searchParams.get('lat');
-  const lon = url.searchParams.get('lon');
+  let lat = url.searchParams.get('lat');
+  let lon = url.searchParams.get('lon');
 
   const apiKey = env.QWEATHER_API_KEY;
 
@@ -21,12 +21,21 @@ export async function onRequestGet(context) {
     });
   }
 
-  if (!lat || !lon) {
-    return errorResponse('缺少 lat/lon 参数', 400);
+  // IP-based fallback: use Cloudflare CF object if no coordinates
+  if ((!lat || !lon) && request.cf) {
+    lat = request.cf.latitude;
+    lon = request.cf.longitude;
   }
 
+  if (!lat || !lon) {
+    return errorResponse('缺少 lat/lon 参数且无法通过 IP 定位', 400);
+  }
+
+  // Round to 2 decimal places for better cache hits
+  lat = parseFloat(lat).toFixed(2);
+  lon = parseFloat(lon).toFixed(2);
+
   try {
-    // 缓存
     const cacheKey = 'cache:weather:' + lat + ':' + lon;
     const cached = await env.WORKBENCH_KV.get(cacheKey);
     if (cached) {

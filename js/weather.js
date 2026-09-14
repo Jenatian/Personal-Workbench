@@ -1,7 +1,7 @@
 /**
  * 天气模块 - 自动定位 + 和风天气 API
  * 前端先调 navigator.geolocation 获取坐标
- * 再通过 Pages Functions 代理调和风天气 API
+ * 定位失败时自动回退到 IP 定位
  */
 const WeatherModule = (function () {
 
@@ -34,28 +34,47 @@ const WeatherModule = (function () {
     fetchWeather();
   }
 
+  function bindRetry(card) {
+    card.onclick = null;
+    card.addEventListener('click', handleRetry);
+  }
+
+  function handleRetry() {
+    fetchWeather();
+  }
+
   async function fetchWeather() {
     const card = document.querySelector('#view-settings .weather-card');
     if (!card) return;
+
+    // Remove previous retry listener
+    card.removeEventListener('click', handleRetry);
 
     card.innerHTML =
       '<span class="weather-icon">📍</span>' +
       '<div class="weather-info"><div class="weather-city">定位中...</div>' +
       '<div class="weather-desc">请稍候</div></div>';
 
-    // 尝试定位
+    // 尝试 GPS 定位
     let location = null;
+    let gpsFailed = false;
+
     try {
       location = await getPosition();
     } catch (e) {
-      renderWeather(card, null, '定位失败，请检查权限');
-      return;
+      gpsFailed = true;
     }
 
-    // 调 API
+    // GPS 失败时回退到 IP 定位
     try {
       const apiBase = getApiBase();
-      const url = apiBase + '/api/weather?lat=' + location.lat + '&lon=' + location.lon;
+      let url;
+      if (location) {
+        url = apiBase + '/api/weather?lat=' + location.lat + '&lon=' + location.lon;
+      } else {
+        // 不传坐标，后端通过 Cloudflare CF 对象 IP 定位
+        url = apiBase + '/api/weather';
+      }
       const res = await fetch(url, {
         headers: { 'X-User-Id': getUserId() },
       });
@@ -75,21 +94,23 @@ const WeatherModule = (function () {
         }
       }
     } catch (e) {
-      renderWeather(card, { city: '网络异常', text: '点击重试', temp: '--', wind: e.message || '' }, null);
-      card.style.cursor = 'pointer';
-      card.onclick = () => fetchWeather();
+      renderError(card, '网络异常', e.message || '');
       return;
     }
 
     // 兜底
-    renderWeather(card, {
-      city: '获取失败',
-      text: '点击重试',
-      temp: '--',
-      wind: '',
-    }, null);
+    renderError(card, '获取失败', '');
+  }
+
+  function renderError(card, title, desc) {
+    card.innerHTML =
+      '<span class="weather-icon">📍</span>' +
+      '<div class="weather-info">' +
+      '<div class="weather-city">' + escapeHtml(title) + '</div>' +
+      '<div class="weather-desc">' + (desc ? escapeHtml(desc) + ' · ' : '') + '点击重试</div>' +
+      '</div>';
     card.style.cursor = 'pointer';
-    card.onclick = () => fetchWeather();
+    bindRetry(card);
   }
 
   function getPosition() {
@@ -99,24 +120,17 @@ const WeatherModule = (function () {
         return;
       }
       navigator.geolocation.getCurrentPosition(
-        (pos) => resolve({ lat: pos.coords.latitude.toFixed(2), lon: pos.coords.longitude.toFixed(2) }),
+        (pos) => resolve({
+          lat: pos.coords.latitude.toFixed(2),
+          lon: pos.coords.longitude.toFixed(2),
+        }),
         (err) => reject(err),
-        { timeout: 8000, enableHighAccuracy: false }
+        { timeout: 10000, enableHighAccuracy: false, maximumAge: 300000 }
       );
     });
   }
 
   function renderWeather(card, data, error) {
-    if (error) {
-      card.innerHTML =
-        '<span class="weather-icon">📍</span>' +
-        '<div class="weather-info"><div class="weather-city">' + error + '</div>' +
-        '<div class="weather-desc">点击重试</div></div>';
-      card.style.cursor = 'pointer';
-      card.onclick = () => fetchWeather();
-      return;
-    }
-
     card.innerHTML =
       '<span class="weather-icon">' + getIcon(data.text) + '</span>' +
       '<div class="weather-info">' +
@@ -125,7 +139,7 @@ const WeatherModule = (function () {
       '</div>' +
       '<div class="weather-temp">' + (data.temp || '--') + '</div>';
     card.style.cursor = 'default';
-    card.onclick = null;
+    card.removeEventListener('click', handleRetry);
   }
 
   function escapeHtml(str) {
