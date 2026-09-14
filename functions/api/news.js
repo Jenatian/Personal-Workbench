@@ -76,6 +76,38 @@ const AI_MODELS = [
   '@cf/qwen/qwq-32b',
 ];
 
+function cleanAISummary(text) {
+  if (!text) return '';
+  let cleaned = text.trim();
+
+  // Remove <think>...</think> blocks
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  // Remove <thinking>...</thinking> blocks
+  cleaned = cleaned.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+
+  // If still very long, likely contains reasoning - take last paragraph
+  if (cleaned.length > 300) {
+    const paras = cleaned.split(/\n\s*\n/).filter((p) => p.trim().length > 20);
+    if (paras.length > 1) {
+      cleaned = paras[paras.length - 1].trim();
+    }
+  }
+
+  // Remove common reasoning prefixes
+  cleaned = cleaned.replace(/^(好的|首先|那么|嗯|根据|综合|总结来说|总的来说)[，,。]/i, '');
+  cleaned = cleaned.trim();
+
+  // If still too long, take last 2-3 sentences
+  if (cleaned.length > 200) {
+    const sentences = cleaned.split(/[。！？\n]/).filter((s) => s.trim().length > 5);
+    if (sentences.length > 3) {
+      cleaned = sentences.slice(-3).join('。') + '。';
+    }
+  }
+
+  return cleaned.trim();
+}
+
 async function generateAISummary(env, topItems) {
   if (!env.AI || topItems.length === 0) return '';
 
@@ -84,16 +116,16 @@ async function generateAISummary(env, topItems) {
     (item.summary ? ' - ' + item.summary : '')
   ).join('\n');
 
-  const prompt = '以下是最新的AI行业新闻，请直接用中文写一段2-3句话的总结，概括今天AI圈的核心动态。不要输出思考过程，不要罗列标题，直接给总结：\n\n' + newsText;
+  const prompt = '以下是最新的AI行业新闻。请直接给出2-3句话的中文总结，概括今天AI圈的核心动态。直接输出总结内容，不要输出思考过程：\n\n' + newsText;
 
   for (const model of AI_MODELS) {
     try {
       const aiRes = await env.AI.run(model, {
         messages: [
-          { role: 'system', content: '你直接输出新闻总结，不输出任何思考过程或分析步骤。' },
+          { role: 'system', content: '你直接输出新闻总结，不输出任何思考过程、分析步骤或"好的""首先"等开头语。直接给出总结段落。' },
           { role: 'user', content: prompt },
         ],
-        max_tokens: 500,
+        max_tokens: 1000,
       });
 
       let result = '';
@@ -101,8 +133,9 @@ async function generateAISummary(env, topItems) {
       else if (aiRes && aiRes.response) result = aiRes.response;
       else if (aiRes && aiRes.result) result = aiRes.result;
 
-      result = result.trim();
-      if (result.length > 10) return result;
+      result = cleanAISummary(result);
+      if (result.length > 10 && result.length < 500) return result;
+      if (result.length >= 500) return result.slice(0, 300);
     } catch (e) {
       // try next model
     }
