@@ -126,9 +126,6 @@ const Storage = (function () {
   async function sync() {
     const apiBase = localStorage.getItem('apiBase') || '';
     const userId = localStorage.getItem('userId') || 'default';
-    if (!apiBase) {
-      return { ok: false, message: '请先填写 Worker 地址并保存' };
-    }
     const data = { schedule: schedule.list(), accounting: accounting.list() };
     try {
       const res = await fetchWithTimeout(apiBase + SYNC_URL + '?uid=' + userId, {
@@ -145,9 +142,6 @@ const Storage = (function () {
   async function pull() {
     const apiBase = localStorage.getItem('apiBase') || '';
     const userId = localStorage.getItem('userId') || 'default';
-    if (!apiBase) {
-      return { ok: false, message: '请先填写 Worker 地址并保存' };
-    }
     try {
       const res = await fetchWithTimeout(apiBase + SYNC_URL + '?uid=' + userId, {
         headers: { 'X-User-Id': userId },

@@ -91,7 +91,7 @@
     });
 
     // 自动从云端拉取数据(静默,失败不影响使用)
-    if (typeof Storage !== 'undefined' && localStorage.getItem('apiBase') !== null) {
+    if (typeof Storage !== 'undefined') {
       Storage.pull().then(() => {
         if (typeof ScheduleModule !== 'undefined') ScheduleModule.render();
         if (typeof AccountingModule !== 'undefined') AccountingModule.render();
